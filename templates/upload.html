@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bulk Upload</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --powerbi-blue: #00b0ad;
+        --powerbi-dark: #2b2b2b;
+        --powerbi-light: #f2f2f2;
+        --powerbi-accent: #ffb900;
+      }
+
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background-color: var(--powerbi-light);
+        margin: 0;
+        padding: 0;
+        color: var(--powerbi-dark);
+      }
+
+      .dashboard-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--powerbi-blue);
+      }
+
+      .header-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--powerbi-blue);
+      }
+
+      .upload-box {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+      }
+
+      .format-table {
+        margin: 20px auto;
+        border-collapse: collapse;
+        width: 100%;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .format-table th,
+      .format-table td {
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        text-align: center;
+      }
+
+      .format-table th {
+        background-color: var(--powerbi-blue);
+        color: white;
+      }
+
+      .format-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+
+      .upload-form {
+        margin-top: 30px;
+      }
+
+      .file-input {
+        margin-bottom: 20px;
+      }
+
+      .file-input label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
+
+      .file-input input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+      }
+
+      .submit-btn {
+        background-color: var(--powerbi-blue);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .submit-btn:hover {
+        background-color: #008a87;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 176, 173, 0.3);
+      }
+
+      .note {
+        margin-top: 30px;
+        padding: 15px;
+        background-color: rgba(0, 176, 173, 0.1);
+        border-radius: 6px;
+      }
+
+      .note h3 {
+        margin-top: 0;
+        color: var(--powerbi-blue);
+      }
+
+      .note ul {
+        padding-left: 20px;
+      }
+
+      .note li {
+        margin-bottom: 8px;
+      }
+
+      @media (max-width: 768px) {
+        .dashboard-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .format-table {
+          font-size: 14px;
+        }
+
+        .format-table th,
+        .format-table td {
+          padding: 8px 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <div class="dashboard-header">
+        <div>
+          <div class="header-title">Bulk Student Data Upload</div>
+        </div>
+      </div>
+
+      <div class="upload-box">
+        <p>
+          Upload an Excel or CSV file with student data to generate CGPA
+          predictions:
+        </p>
+
+        <table class="format-table">
+          <thead>
+            <tr>
+              <th>Student_ID</th>
+              <th>Gender</th>
+              <th>Age</th>
+              <th>Attendance (%)</th>
+              <th>HighSchool GPA</th>
+              <th>Internal Assessments (%)</th>
+              <th>Participation Score</th>
+              <th>Projects Completed</th>
+              <th>Study Hours/Week</th>
+              <th>Backlogs</th>
+              <th>Sem 1 GPA</th>
+              <th>Sem 2 GPA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>S0001</td>
+              <td>Male</td>
+              <td>17</td>
+              <td>90</td>
+              <td>7.33</td>
+              <td>82.8</td>
+              <td>2.9</td>
+              <td>5</td>
+              <td>18.1</td>
+              <td>0</td>
+              <td>7.92</td>
+              <td>8.33</td>
+            </tr>
+            <tr>
+              <td>S0002</td>
+              <td>Female</td>
+              <td>18</td>
+              <td>90.4</td>
+              <td>6.94</td>
+              <td>69.4</td>
+              <td>3.3</td>
+              <td>1</td>
+              <td>2</td>
+              <td>0</td>
+              <td>7.22</td>
+              <td>6.91</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="note">
+          <h3>File Requirements:</h3>
+          <ul>
+            <li><strong>Format:</strong> CSV or Excel (.xlsx, .xls)</li>
+            <li>
+              <strong>Columns (in exact order):</strong>
+              <ol style="margin-left: 20px; margin-top: 5px">
+                <li>Age</li>
+                <li>Gender (Must be "Male" or "Female")</li>
+                <li>Attendance (%)</li>
+                <li>HSC marks</li>
+                <li>Internal Assessments (%)</li>
+                <li>Participation Score</li>
+                <li>Projects Completed</li>
+                <li>Study Hours/Week</li>
+                <li>Backlogs</li>
+                <li>Sem 1 GPA</li>
+                <li>Sem 2 GPA</li>
+              </ol>
+            </li>
+            <li>First row must contain these exact column headers</li>
+            <li>Maximum file size: 5MB</li>
+            <li>All columns must be present (empty values allowed)</li>
+          </ul>
+        </div>
+
+        <form
+          action="/predict"
+          method="post"
+          enctype="multipart/form-data"
+          class="upload-form"
+        >
+          <div class="file-input">
+            <label for="file">Select your data file:</label>
+            <input
+              type="file"
+              name="file"
+              id="file"
+              accept=".csv,.xlsx,.xls"
+              required
+            />
+          </div>
+          <button type="submit" class="submit-btn">Upload and Predict</button>
+          <a href="/" class="submit-btn">Home</a>
+        </form>
+        
+      </div>
+    </div>
+  </body>
+</html>

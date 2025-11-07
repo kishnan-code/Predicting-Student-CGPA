@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bulk Prediction Results</title>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --powerbi-blue: #00b0ad;
+      --powerbi-dark: #2b2b2b;
+      --powerbi-light: #f2f2f2;
+    }
+
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: var(--powerbi-light);
+      margin: 0;
+      padding: 10px;
+      color: var(--powerbi-dark);
+      font-size: 13px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--powerbi-blue);
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--powerbi-blue);
+    }
+
+    .back-btn {
+      background-color: var(--powerbi-blue);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Segoe UI';
+      text-decoration: none;
+      display: inline-block;
+      font-size: 12px;
+    }
+
+    .result-message {
+      background-color: white;
+      border-radius: 6px;
+      padding: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 10px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .download-btn {
+      background-color: var(--powerbi-blue);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      background: white;
+      font-size: 12px;
+    }
+
+    th, td {
+      padding: 6px 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      line-height: 1.3;
+    }
+
+    th {
+      background-color: var(--powerbi-blue);
+      color: white;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      font-size: 12px;
+    }
+
+    tr:hover {
+      background-color: #f5f5f5;
+    }
+
+    .highlight {
+      font-weight: bold;
+      color: var(--powerbi-blue);
+    }
+
+    .good {
+      color: #2ecc71;
+    }
+
+    .average {
+      color: #f39c12;
+    }
+
+    .poor {
+      color: #e74c3c;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-size: 12px;
+      margin-bottom: 3px;
+      color: #666;
+    }
+
+    select, input {
+      padding: 5px 8px;
+      border-radius: 3px;
+      border: 1px solid #ddd;
+      font-family: 'Segoe UI';
+      font-size: 12px;
+    }
+
+    .status-badge {
+      font-size: 10px;
+      padding: 2px 4px;
+      border-radius: 3px;
+      margin-left: 4px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 5px;
+        font-size: 12px;
+      }
+
+      th, td {
+        padding: 4px 6px;
+        font-size: 11px;
+      }
+
+      .header-title {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="header-title">Bulk Results</div>
+    </div>
+    
+    <a href="/bulk" class="back-btn">New Upload</a><a href="/" class="back-btn">Home</a>
+  </div>
+
+  <div class="result-message">
+    {{ message }}
+    {% if download_ready %}
+      <a href="/download" class="download-btn">Download Results</a>
+    {% endif %}
+  </div>
+
+  {% if table_html %}
+  <div class="filters">
+    <div class="filter-group">
+      <label for="entriesFilter">Show</label>
+      <select id="entriesFilter">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="all" selected>All</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="searchFilter">Search</label>
+      <input type="text" id="searchFilter" placeholder="Filter...">
+    </div>
+  </div>
+
+  <div id="tableContainer" style="max-height: calc(100vh - 180px); overflow: auto;">
+    {{ table_html|safe }}
+  </div>
+  {% endif %}
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const table = document.querySelector('table');
+      if (!table) return;
+
+      // Add highlight class to Prediction column header
+      const headers = Array.from(table.querySelectorAll('th'));
+      const predictionIndex = headers.findIndex(header => 
+        header.textContent.toLowerCase().includes('prediction')
+      );
+
+      if (predictionIndex >= 0) {
+        headers[predictionIndex].classList.add('highlight');
+        
+        // Add status to prediction cells
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+          const cell = row.querySelectorAll('td')[predictionIndex];
+          if (cell) {
+            const predValue = parseFloat(cell.textContent);
+            const statusSpan = document.createElement('span');
+            statusSpan.className = 'status-badge';
+            
+            if (predValue >= 8.5) {
+              cell.classList.add('good');
+              statusSpan.textContent = 'Excellent';
+              statusSpan.style.backgroundColor = '#e8f5e9';
+            } else if (predValue >= 7.0) {
+              cell.classList.add('average');
+              statusSpan.textContent = 'Good';
+              statusSpan.style.backgroundColor = '#fff3e0';
+            } else {
+              cell.classList.add('poor');
+              statusSpan.textContent = 'Needs Help';
+              statusSpan.style.backgroundColor = '#ffebee';
+            }
+            cell.appendChild(statusSpan);
+          }
+        });
+      }
+
+      // Set up filter functionality
+      const entriesFilter = document.getElementById('entriesFilter');
+      const searchFilter = document.getElementById('searchFilter');
+
+      if (entriesFilter && searchFilter) {
+        entriesFilter.addEventListener('change', filterTable);
+        searchFilter.addEventListener('input', filterTable);
+      }
+
+      function filterTable() {
+        const rows = table.querySelectorAll('tbody tr');
+        const searchTerm = searchFilter.value.toLowerCase();
+        const entryLimit = entriesFilter.value === 'all' ? Infinity : parseInt(entriesFilter.value);
+        
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+          const rowText = row.textContent.toLowerCase();
+          const isVisible = rowText.includes(searchTerm) && visibleCount < entryLimit;
+          
+          row.style.display = isVisible ? '' : 'none';
+          if (isVisible) visibleCount++;
+        });
+      }
+
+      // Initially show all rows
+      if (entriesFilter) {
+        entriesFilter.value = 'all';
+        filterTable();
+      }
+    });
+  </script>
+</body>
+</html>

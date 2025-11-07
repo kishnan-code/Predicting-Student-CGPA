@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prediction History</title>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --powerbi-blue: #00b0ad;
+      --powerbi-dark: #2b2b2b;
+      --powerbi-light: #f2f2f2;
+    }
+
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: var(--powerbi-light);
+      margin: 0;
+      padding: 20px;
+      color: var(--powerbi-dark);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid var(--powerbi-blue);
+    }
+
+    .header-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--powerbi-blue);
+    }
+
+    .student-info {
+      font-size: 16px;
+    }
+
+    .back-btn {
+      background-color: var(--powerbi-blue);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Segoe UI';
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      background: white;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: var(--powerbi-blue);
+      color: white;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+
+    tr:hover {
+      background-color: #f5f5f5;
+    }
+
+    .highlight {
+      font-weight: bold;
+      color: var(--powerbi-blue);
+    }
+
+    .good {
+      color: #2ecc71;
+    }
+
+    .average {
+      color: #f39c12;
+    }
+
+    .poor {
+      color: #e74c3c;
+    }
+
+    .filters {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-size: 14px;
+      margin-bottom: 5px;
+      color: #666;
+    }
+
+    select, input {
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      font-family: 'Segoe UI';
+    }
+
+    @media (max-width: 768px) {
+      .filters {
+        flex-direction: column;
+      }
+      
+      table {
+        font-size: 14px;
+      }
+      
+      th, td {
+        padding: 8px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="header-title">Prediction History</div>
+      <div class="student-info">Viewing history for: <span id="studentName"></span></div>
+    </div>
+    <a href="/" class="back-btn">Back to Dashboard</a>
+  </div>
+
+  <div class="filters">
+    <div class="filter-group">
+      <label for="entriesFilter">Show Entries</label>
+      <select id="entriesFilter">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="all">All</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="sortFilter">Sort By</label>
+      <select id="sortFilter">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="highest">Highest CGPA</option>
+        <option value="lowest">Lowest CGPA</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="searchFilter">Search</label>
+      <input type="text" id="searchFilter" placeholder="Filter records...">
+    </div>
+  </div>
+
+  <div id="tableContainer">
+    <table id="historyTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Student Name</th>
+          <th>Attendance</th>
+          <th>HS GPA</th>
+          <th>Internals</th>
+          <th>Participation</th>
+          <th>Projects</th>
+          <th>Study Hours</th>
+          <th>Backlogs</th>
+          <th>Sem 1 GPA</th>
+          <th>Sem 2 GPA</th>
+          <th>Prediction</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="historyTableBody">
+        <!-- Data will be inserted here by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <div id="loadingMessage" style="text-align: center; padding: 20px;">
+    Loading history data...
+  </div>
+
+  <div id="noDataMessage" style="text-align: center; padding: 20px; display: none;">
+    No prediction history found.
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const studentName = urlParams.get('student') || '';
+      document.getElementById('studentName').textContent = studentName || 'All Students';
+      
+      // Load history data
+      fetch(`/api/history?student=${encodeURIComponent(studentName)}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            throw new Error(data.error);
+          }
+          if (data.length === 0) {
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('noDataMessage').style.display = 'block';
+            return;
+          }
+          
+          processData(data);
+          document.getElementById('loadingMessage').style.display = 'none';
+        })
+        .catch(error => {
+          console.error('Error loading history:', error);
+          document.getElementById('loadingMessage').style.display = 'none';
+          document.getElementById('noDataMessage').textContent = error.message || 'Error loading history data';
+          document.getElementById('noDataMessage').style.display = 'block';
+        });
+      
+      // Set up filter event listeners
+      document.getElementById('entriesFilter').addEventListener('change', filterData);
+      document.getElementById('sortFilter').addEventListener('change', filterData);
+      document.getElementById('searchFilter').addEventListener('input', filterData);
+    });
+    
+    let allData = [];
+    
+    function processData(data) {
+      allData = data.map(item => {
+        return {
+          timestamp: item.Timestamp,
+          student_name: item.Student_Name,
+          attendance: item['Attendance (%)'],
+          highschool_gpa: item.HighSchool_GPA,
+          internal_assessments: item['Internal_Assessments (%)'],
+          participation_score: item.Participation_Score,
+          projects_completed: item.Projects_Completed,
+          study_hours: item.Study_Hours_Per_Week,
+          backlogs: item.Backlogs,
+          sem1_gpa: item.Sem_1_GPA,
+          sem2_gpa: item.Sem_2_GPA,
+          predicted_cgpa: item.Predicted_CGPA,
+          searchable: `${item.Timestamp} ${item.Student_Name} ${item['Attendance (%)']} ${item.HighSchool_GPA} ${item['Internal_Assessments (%)']} ${item.Participation_Score} ${item.Projects_Completed} ${item.Study_Hours_Per_Week} ${item.Backlogs} ${item.Sem_1_GPA} ${item.Sem_2_GPA} ${item.Predicted_CGPA}`.toLowerCase()
+        };
+      });
+      
+      if (allData.length > 0) {
+        filterData(); // Apply default filters
+      }
+    }
+    
+    function filterData() {
+      const entriesFilter = document.getElementById('entriesFilter').value;
+      const sortFilter = document.getElementById('sortFilter').value;
+      const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+      
+      // Filter data based on search
+      let filteredData = allData.filter(item => {
+        return item.searchable.includes(searchFilter);
+      });
+      
+      // Sort data
+      switch(sortFilter) {
+        case 'newest':
+          filteredData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+          break;
+        case 'oldest':
+          filteredData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+          break;
+        case 'highest':
+          filteredData.sort((a, b) => parseFloat(b.predicted_cgpa) - parseFloat(a.predicted_cgpa));
+          break;
+        case 'lowest':
+          filteredData.sort((a, b) => parseFloat(a.predicted_cgpa) - parseFloat(b.predicted_cgpa));
+          break;
+      }
+      
+      // Limit entries
+      if (entriesFilter !== 'all') {
+        filteredData = filteredData.slice(0, parseInt(entriesFilter));
+      }
+      
+      // Update table
+      updateTable(filteredData);
+    }
+    
+    function updateTable(data) {
+      const tableBody = document.getElementById('historyTableBody');
+      tableBody.innerHTML = '';
+      
+      if (data.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td colspan="13" style="text-align: center;">No matching records found</td>`;
+        tableBody.appendChild(row);
+        return;
+      }
+      
+      data.forEach(item => {
+        const tr = document.createElement('tr');
+        
+        // Determine status based on predicted CGPA
+        const statusClass = item.predicted_cgpa >= 8.5 ? 'good' : 
+                          item.predicted_cgpa >= 7.0 ? 'average' : 'poor';
+        const statusText = item.predicted_cgpa >= 8.5 ? 'Excellent' : 
+                         item.predicted_cgpa >= 7.0 ? 'Good' : 'Needs Improvement';
+        
+        tr.innerHTML = `
+          <td>${formatDate(item.timestamp)}</td>
+          <td>${item.student_name}</td>
+          <td>${item.attendance}%</td>
+          <td>${item.highschool_gpa}</td>
+          <td>${item.internal_assessments}%</td>
+          <td>${item.participation_score}/5</td>
+          <td>${item.projects_completed}</td>
+          <td>${item.study_hours} hrs</td>
+          <td>${item.backlogs}</td>
+          <td>${item.sem1_gpa}</td>
+          <td>${item.sem2_gpa}</td>
+          <td class="highlight">${item.predicted_cgpa}</td>
+          <td class="${statusClass}">${statusText}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+    
+    function formatDate(timestamp) {
+      if (!timestamp) return '';
+      const date = new Date(timestamp);
+      return isNaN(date) ? timestamp : date.toLocaleDateString();
+    }
+  </script>
+</body>
+</html>
