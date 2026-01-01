@@ -3,7 +3,7 @@
 ## Overview
 This project is a Machine Learning-powered web application built with Flask that predicts a student's Final CGPA based on their academic performance and other influencing factors. It supports both single-student prediction via a web form and bulk prediction via file upload.
 
-🔗 **Live App:** [https://lnkd.in/em_mRya4](https://lnkd.in/em_mRya4)
+🔗 **Live App:** https://predicting-student-cgpa-ttmi.onrender.com/
 
 🌐 **Project Page (Portfolio):** [https://lnkd.in/eenjfwsG](https://lnkd.in/eenjfwsG)
 
